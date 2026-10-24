@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm 11 默认拦截依赖的安装脚本。Vite/tsup 依赖 esbuild 的平台二进制安装，
+# 因此只对白名单中的 esbuild 放行，而不是全局允许任意依赖执行脚本。
+allowBuilds:
+  esbuild: true

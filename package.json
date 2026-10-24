@@ -1,0 +1,62 @@
+{
+  "name": "trace-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A learning-oriented browser observability SDK workspace.",
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --filter=@trace-kit/playground",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "clean": "turbo run clean && rimraf .turbo",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm format:check",
+    "prepare": "husky",
+    "lint:staged": "lint-staged",
+    "commit": "git-cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
+  },
+  "lint-staged": {
+    "*.{js,cjs,mjs,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml,css,html}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "commitizen": "^4.3.2",
+    "cz-git": "^1.14.0",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "jsdom": "^30.1.3",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "rimraf": "^6.1.3",
+    "tsup": "^9.0.0",
+    "turbo": "^2.11.10",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  }
+}

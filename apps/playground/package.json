@@ -1,0 +1,24 @@
+{
+  "name": "@trace-kit/playground",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A local browser playground for learning and debugging TraceKit.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run --environment jsdom",
+    "test:watch": "vitest --environment jsdom",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@trace-kit/browser": "workspace:*",
+    "@trace-kit/core": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}
