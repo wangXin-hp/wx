@@ -3,7 +3,8 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  bundle: false,
+  // Core 的内部模块不是独立发布入口；合并后 ESM 产物不依赖消费者解析无扩展名的相对导入。
+  bundle: true,
   clean: false,
   dts: false,
   sourcemap: true,

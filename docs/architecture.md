@@ -44,3 +44,28 @@ browser 和 playground 通过各包 `exports.types` 查找声明文件。全新�
 - 非直观代码说明“为什么这样做”以及违反约束的后果。
 - 不给赋值、循环、条件分支等显而易见的语句逐行翻译。
 - 更长的取舍进入架构文档，避免源文件变成教程文章。
+
+## 8. Core 事件协议的职责边界
+
+`EventEnvelope` 是跨运行时的数据契约，而不是某个浏览器 API 的镜像。它只描述后端去重、检索和协议兼容真正需要的字段：
+
+- `eventId` 是事件身份。它在事件创建时生成，并在 Transport 重试时保持不变；服务端可以用它做幂等去重，也能把客户端日志、上报请求和后端记录串起来。
+- `sessionId` 是一次 SDK 实例生命周期的关联键。第一版不读取 Cookie、localStorage 或用户身份系统，避免在没有明确授权时扩大采集范围。
+- `timestamp` 是客户端发生时间。网络延迟和离线重试会让服务端接收时间不同，因此后端以后还应保存自己的 `receivedAt`。
+- `sdk.name` 和 `sdk.version` 让数据服务在协议演进时识别生产者版本，避免不同版本 payload 被错误解析。
+
+`MonitorClient` 只负责创建 envelope、执行 `beforeSend` 和调用 Transport；重试、批量、超时和 Beacon 属于后续 browser Transport 的职责。这样核心包可以在没有 DOM 的 Node 环境中测试，也不会把网络故障处理逻辑偷偷混进事件协议。
+
+## 9. 为什么先做安全序列化
+
+业务代码抛出的 rejection reason 不保证是 `Error`，自定义事件也可能包含 BigInt、循环引用或读取会抛异常的 getter。`safeSerialize` 将这些值变成可传输的 JSON 结构，并对循环路径、最大深度和异常 getter 给出占位值。监控 SDK 的优先级是“记录原始故障”，不能因为记录故障本身再抛出第二个故障。
+
+## 10. Integration 生命周期
+
+Integration 的 `setup` 可以安装监听器并返回 teardown。客户端关闭时按后进先出顺序执行清理，再关闭 Transport；重复调用 `close()` 共享同一个 Promise，保证热更新、路由卸载或应用退出时不会重复移除监听器或重复关闭网络资源。
+
+## 11. Turbo 的 outputs 为什么有时是空数组
+
+`outputs` 描述“任务成功后应该被 Turbo 缓存并在下次恢复的文件”。`build` 有真实产物，所以声明 `dist/**`；lint、typecheck 和 test 通常只输出终端诊断，不应缓存整个源码树或日志，因此使用 `outputs: []`。这不会阻止任务执行，也不会决定任务是否存在；真正执行哪个命令由工作区 `package.json` 的同名 script 决定。
+
+本项目使用 `ui: stream` 而不是 `ui: tui`，因为流式输出更适合 PowerShell、日志重定向和 CI。曾经出现的 `3221225781` 对应十六进制 `C0000135`，属于 Windows 进程加载原生依赖失败，和 lint 的 outputs 配置没有直接关系。

@@ -35,5 +35,5 @@
     }
   },
   "cacheDir": ".turbo/cache",
-  "ui": "tui"
+  "ui": "stream"
 }

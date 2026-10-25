@@ -2,7 +2,7 @@
 
 TraceKit 是一个以学习和验证为目标的浏览器可观测性 SDK 项目。项目从空仓库逐步构建，每个阶段都保留架构决策、运行证据和真实调试记录。
 
-当前进度：**检查点 1——工程骨架**。此时还没有错误采集、性能采集或数据上报能力，最小导出仅用于验证 monorepo 的包边界与构建链路。
+当前进度：**检查点 2——Core SDK 与事件协议**。现在已经具备平台无关的事件模型、客户端生命周期、错误归一化和内存/控制台 Transport；浏览器监听、性能指标和网络批量上报仍在后续检查点。
 
 ## 为什么使用 monorepo
 
@@ -23,6 +23,10 @@ packages/browser/    浏览器 SDK 包
 docs/                架构和开发记录
 ```
 
+Core SDK 的逐步阅读指南见 [docs/core-sdk-guide.md](docs/core-sdk-guide.md)，它解释事件从 `capture` 到 Transport 的完整链路，以及 eventId、sessionId、beforeSend 和安全序列化的职责。
+
+如果 Windows PowerShell 中看到 `3221225781`，先将它转换为十六进制：`C0000135` 表示进程依赖的 DLL/原生组件没有正确加载。本项目的 Turbo 使用 `ui: stream`，避免交互式 TUI 在部分终端环境中触发这个退出问题。`turbo.json` 中 lint、typecheck、test 的 `outputs: []` 是有意的：它们只产生诊断或测试结果，不应把源码目录、日志或临时文件当作缓存产物。
+
 ## 本地运行
 
 ```bash
@@ -35,6 +39,28 @@ pnpm dev
 ```
 
 `pnpm dev` 启动前会先构建 playground 的上游依赖。浏览器打开终端给出的地址后，应看到 browser 与 core 两个包名。
+
+## Core SDK 快速体验
+
+```ts
+import { MemoryTransport, MonitorClient } from '@trace-kit/core'
+
+const transport = new MemoryTransport()
+const client = new MonitorClient({
+  appId: 'my-learning-app',
+  transport,
+  beforeSend(event) {
+    // 脱敏和丢弃策略放在进入 Transport 前，避免敏感数据进入队列。
+    return { ...event, context: { ...event.context, source: 'demo' } }
+  },
+})
+
+await client.captureException(new Error('demo failure'))
+await client.captureMessage('checkout started')
+await client.captureEvent('button_clicked', { button: 'pay' })
+```
+
+每个事件都包含稳定的 `eventId` 和当前 SDK 实例的 `sessionId`。`eventId` 在 Transport 重试时不能重新生成；`sessionId` 第一版不读取浏览器存储，只覆盖一次客户端实例生命周期。
 
 ## 常用命令
 
@@ -73,10 +99,12 @@ docs(docs): record transport debugging notes
 1. 阅读根 `package.json` 和 `pnpm-workspace.yaml`，理解 workspace 范围。
 2. 阅读 `turbo.json`，画出 core → browser → playground 的构建顺序。
 3. 对比两个 SDK 包的 TypeScript 配置，确认只有 browser 包包含 DOM 类型。
-4. 对照 `tsup.config.ts` 与包清单的 `exports`，确认每个路径都能在 `dist` 找到。
-5. 运行 `pnpm dev`，在浏览器开发者工具中确认没有模块解析错误。
-6. 把真实问题记录到 `docs/development-log.md`，不要事后虚构调试经历。
+4. 阅读 `packages/core/src/types.ts`，解释 eventId、sessionId、sdk.version 和 timestamp 的不同职责。
+5. 阅读 `packages/core/src/client.ts`，跟踪一次 `captureMessage` 从建 envelope 到 beforeSend 再到 Transport 的顺序。
+6. 对照 `tsup.config.ts` 与包清单的 `exports`，确认每个路径都能在 `dist` 找到。
+7. 运行 `pnpm dev`，在浏览器开发者工具中确认没有模块解析错误。
+8. 把真实问题记录到 `docs/development-log.md`，不要事后虚构调试经历。
 
 ## 当前明确不包含
 
-React、后端服务、数据库、Kafka、Docker、CI/CD、监控事件协议和采集逻辑都不属于检查点 1。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。
+React、后端服务、数据库、Kafka、Docker、CI/CD、浏览器事件监听、Web Vitals 和网络批量上报都不属于当前检查点。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。
