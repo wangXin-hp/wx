@@ -3,7 +3,8 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  bundle: false,
+  // browser 包新增了多个内部 Integration 模块；合并它们可以避免消费者解析无扩展名相对导入。
+  bundle: true,
   clean: false,
   dts: false,
   sourcemap: true,

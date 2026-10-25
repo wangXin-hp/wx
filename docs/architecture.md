@@ -69,3 +69,21 @@ Integration 的 `setup` 可以安装监听器并返回 teardown。客户端关�
 `outputs` 描述“任务成功后应该被 Turbo 缓存并在下次恢复的文件”。`build` 有真实产物，所以声明 `dist/**`；lint、typecheck 和 test 通常只输出终端诊断，不应缓存整个源码树或日志，因此使用 `outputs: []`。这不会阻止任务执行，也不会决定任务是否存在；真正执行哪个命令由工作区 `package.json` 的同名 script 决定。
 
 本项目使用 `ui: stream` 而不是 `ui: tui`，因为流式输出更适合 PowerShell、日志重定向和 CI。曾经出现的 `3221225781` 对应十六进制 `C0000135`，属于 Windows 进程加载原生依赖失败，和 lint 的 outputs 配置没有直接关系。
+
+## 12. Browser SDK 的职责边界
+
+Browser SDK 是 Core 的运行时适配层：它知道 `window`、`document` 和 `navigator`，但不重新定义事件协议。错误监听器只负责把浏览器事件转换成 `client.captureException()` 调用，eventId、错误归一化、beforeSend 和 Transport 仍由 Core 负责。
+
+### 为什么使用 addEventListener
+
+业务应用可能已经设置 `window.onerror`。直接赋值会覆盖原处理器，造成业务逻辑回归；`addEventListener('error', handler)` 可以并存多个监听器。Integration 的 teardown 会移除同一个 handler，避免热更新后重复采集。
+
+### 为什么 rejection reason 不直接断言为 Error
+
+JavaScript 允许 `Promise.reject('failed')`、`Promise.reject({ message: 'failed' })` 甚至 rejection 一个循环对象。BrowserErrorIntegration 原样把 `event.reason` 交给 Core 的 `normalizeError`，避免浏览器层丢失原始信息或再次抛错。
+
+### 浏览器上下文的采集边界
+
+第一版只保存 origin、pathname、referrer、User-Agent、language 和 platform。URL 的 query/hash 可能包含 token、手机号或业务参数，因此不采集；Cookie、localStorage、输入框内容和请求头也不在默认上下文中。上下文是环境信息，不应该变成隐式用户画像。
+
+`initBrowserMonitoring()` 默认启用错误 Integration，但允许 `defaultIntegrations: false` 并追加自定义 Integration。当前默认 Transport 是 ConsoleTransport，方便学习，不代表事件已经可靠地送达服务器。

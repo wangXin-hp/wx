@@ -2,7 +2,7 @@
 
 TraceKit 是一个以学习和验证为目标的浏览器可观测性 SDK 项目。项目从空仓库逐步构建，每个阶段都保留架构决策、运行证据和真实调试记录。
 
-当前进度：**检查点 2——Core SDK 与事件协议**。现在已经具备平台无关的事件模型、客户端生命周期、错误归一化和内存/控制台 Transport；浏览器监听、性能指标和网络批量上报仍在后续检查点。
+当前进度：**检查点 3——Browser SDK 错误采集与上下文**。现在已经具备平台无关的 Core 事件协议、浏览器错误监听、手动事件 API 和低敏浏览器上下文；性能指标和网络批量上报仍在后续检查点。
 
 ## 为什么使用 monorepo
 
@@ -23,7 +23,7 @@ packages/browser/    浏览器 SDK 包
 docs/                架构和开发记录
 ```
 
-Core SDK 的逐步阅读指南见 [docs/core-sdk-guide.md](docs/core-sdk-guide.md)，它解释事件从 `capture` 到 Transport 的完整链路，以及 eventId、sessionId、beforeSend 和安全序列化的职责。
+Core SDK 的逐步阅读指南见 [docs/core-sdk-guide.md](docs/core-sdk-guide.md)，Browser SDK 的错误监听和上下文边界见 [packages/browser/src/error-integration.ts](packages/browser/src/error-integration.ts) 与 [packages/browser/src/browser-context.ts](packages/browser/src/browser-context.ts)。
 
 如果 Windows PowerShell 中看到 `3221225781`，先将它转换为十六进制：`C0000135` 表示进程依赖的 DLL/原生组件没有正确加载。本项目的 Turbo 使用 `ui: stream`，避免交互式 TUI 在部分终端环境中触发这个退出问题。`turbo.json` 中 lint、typecheck、test 的 `outputs: []` 是有意的：它们只产生诊断或测试结果，不应把源码目录、日志或临时文件当作缓存产物。
 
@@ -39,6 +39,15 @@ pnpm dev
 ```
 
 `pnpm dev` 启动前会先构建 playground 的上游依赖。浏览器打开终端给出的地址后，应看到 browser 与 core 两个包名。
+
+当前 Playground 提供以下操作：
+
+- 触发同步错误：由 `window` 的 `error` 事件自动进入 BrowserErrorIntegration。
+- 触发 Promise rejection：由 `unhandledrejection` 自动捕获。
+- 手动捕获异常、消息和自定义事件：直接调用 Core API。
+- 清空事件：只清空当前页面的 MemoryTransport，不影响 SDK 配置。
+
+事件会显示在页面 JSON 面板和浏览器 Console 中。当前默认是 MemoryTransport/ConsoleTransport 调试模式，还没有发送到后端。
 
 ## Core SDK 快速体验
 
@@ -101,10 +110,11 @@ docs(docs): record transport debugging notes
 3. 对比两个 SDK 包的 TypeScript 配置，确认只有 browser 包包含 DOM 类型。
 4. 阅读 `packages/core/src/types.ts`，解释 eventId、sessionId、sdk.version 和 timestamp 的不同职责。
 5. 阅读 `packages/core/src/client.ts`，跟踪一次 `captureMessage` 从建 envelope 到 beforeSend 再到 Transport 的顺序。
-6. 对照 `tsup.config.ts` 与包清单的 `exports`，确认每个路径都能在 `dist` 找到。
-7. 运行 `pnpm dev`，在浏览器开发者工具中确认没有模块解析错误。
-8. 把真实问题记录到 `docs/development-log.md`，不要事后虚构调试经历。
+6. 阅读 `packages/browser/src/error-integration.ts`，理解 addEventListener 为什么不会覆盖业务的 window.onerror。
+7. 阅读 `packages/browser/src/browser-context.ts`，确认 query、hash、Cookie、localStorage 和请求头都没有进入采集范围。
+8. 运行 `pnpm dev`，逐个点击 Playground 按钮并观察 Console、事件 JSON 和浏览器异常提示。
+9. 把真实问题记录到 `docs/development-log.md`，不要事后虚构调试经历。
 
 ## 当前明确不包含
 
-React、后端服务、数据库、Kafka、Docker、CI/CD、浏览器事件监听、Web Vitals 和网络批量上报都不属于当前检查点。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。
+React、后端服务、数据库、Kafka、Docker、CI/CD、Web Vitals 和网络批量上报都不属于当前检查点。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。

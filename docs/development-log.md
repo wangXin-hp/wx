@@ -112,6 +112,33 @@ pnpm check
 
 建议提交信息：`feat(core): add event protocol and lifecycle client`
 
+## 检查点 3 Browser SDK 记录
+
+### 发生过的验证问题
+
+- 第一次 browser typecheck 发现 `BrowserContext` 具体接口不能直接赋值给 `Record<string, JsonValue>`；移除了没有实际消费者的转换辅助函数，让上下文保持明确的结构类型。
+- 第一次 jsdom 测试中，为验证“禁用默认 Integration”而派发带 `error` 对象的 `ErrorEvent`，Vitest 将它报告为未处理异常。测试改为普通 `error` 事件，只验证没有采集监听器；真正的 ErrorEvent 行为由专门的 Integration 测试覆盖。
+- Playground 原本只验证包名，并且本地尝试代码没有接入 browser 入口。现在改为按钮驱动的实验台，保留手动 capture 的学习路径，并加入同步错误和 rejection 自动捕获。
+
+### 本检查点建议命令
+
+```powershell
+pnpm dev
+pnpm --filter @trace-kit/browser test
+pnpm check
+```
+
+### Playground 人工验证
+
+1. 点击“手动捕获异常”，确认事件类型为 `error`，payload 中有 name/message/stack。
+2. 点击“发送消息事件”，确认事件类型为 `message`。
+3. 点击“发送自定义事件”，确认 payload 中有 `name: button_clicked` 和 data。
+4. 点击“触发同步错误”，确认 BrowserErrorIntegration 从 `window error` 生成一条事件，并观察浏览器 Console 的原始错误提示。
+5. 点击“触发 Promise rejection”，确认 context.source 为 `unhandledrejection`。
+6. 点击“清空事件”，确认页面面板清空；刷新页面后 SDK 会重新生成 sessionId。
+
+建议提交信息：`feat(browser): capture browser errors and context`
+
 ## PowerShell 中的 Turbo 退出码排查
 
 - 初始现象：执行 `pnpm check` 在 `turbo run lint` 刚开始时退出，PowerShell 显示 `3221225781`。

@@ -94,3 +94,36 @@ dd {
     padding: 28px;
   }
 }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 28px 0 18px;
+}
+
+button {
+  padding: 10px 14px;
+  border: 1px solid rgb(125 211 252 / 35%);
+  border-radius: 10px;
+  color: #e5edf7;
+  background: rgb(14 116 144 / 35%);
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgb(14 116 144 / 60%);
+}
+
+.event-output {
+  max-height: 420px;
+  overflow: auto;
+  padding: 18px;
+  border: 1px solid rgb(148 163 184 / 18%);
+  border-radius: 12px;
+  color: #c7d2fe;
+  background: rgb(2 6 23 / 65%);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
