@@ -8,6 +8,7 @@ import {
 
 import { collectBrowserContext } from './browser-context'
 import { BrowserErrorIntegration } from './error-integration'
+import { WebVitalsIntegration } from './performance'
 
 export interface BrowserMonitoringOptions extends Omit<
   MonitorOptions,
@@ -27,7 +28,8 @@ export interface BrowserMonitoringOptions extends Omit<
  * 当前默认 ConsoleTransport 只用于学习和调试，不代表已经完成服务端上报。
  */
 export function initBrowserMonitoring(options: BrowserMonitoringOptions): MonitorClient {
-  const integrations = options.defaultIntegrations === false ? [] : [new BrowserErrorIntegration()]
+  const integrations =
+    options.defaultIntegrations === false ? [] : [new BrowserErrorIntegration(), new WebVitalsIntegration()]
 
   return new MonitorClient({
     ...options,

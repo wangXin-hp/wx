@@ -87,3 +87,21 @@ JavaScript 允许 `Promise.reject('failed')`、`Promise.reject({ message: 'faile
 第一版只保存 origin、pathname、referrer、User-Agent、language 和 platform。URL 的 query/hash 可能包含 token、手机号或业务参数，因此不采集；Cookie、localStorage、输入框内容和请求头也不在默认上下文中。上下文是环境信息，不应该变成隐式用户画像。
 
 `initBrowserMonitoring()` 默认启用错误 Integration，但允许 `defaultIntegrations: false` 并追加自定义 Integration。当前默认 Transport 是 ConsoleTransport，方便学习，不代表事件已经可靠地送达服务器。
+
+## 13. 性能指标的职责边界
+
+性能指标不是普通的 `performance.now()` 差值可以替代的简单数字。CLS 需要处理布局位移窗口，LCP 需要观察候选内容变化，INP 需要分析交互延迟，TTFB/FCP 也有浏览器生命周期和页面可见性边界。TraceKit 使用官方 `web-vitals` 计算这些标准指标，只负责：
+
+- 把 Metric 的 `name/value/delta/rating/navigationType/id` 映射为自己的 payload；
+- 给事件统一添加 `eventType: performance`、context 和 eventId；
+- 控制 Integration 生命周期和 `reportAllChanges` 选项。
+
+默认不启用 `reportAllChanges`。这样一次页面生命周期通常只上报每个指标的最终值，避免同一指标的中间变化过度占用队列和存储。需要实时观察时可以显式创建 `new WebVitalsIntegration({ reportAllChanges: true })`，但服务端必须使用 `metricId` 和 `delta` 做去重或累计。
+
+### LOAD 为什么自行计算
+
+`web-vitals` 的核心指标集合不包含业务定义的页面 LOAD 事件，因此 TraceKit 从 Navigation Timing 的 navigation entry 读取 `loadEventEnd`。如果 load 回调刚触发时 `loadEventEnd` 仍为 0，则依次回退到 `domComplete` 和 `performance.now()`，并把 `source: navigation-timing` 写入 payload。这个回退是为了不丢失事件，不代表三个时间点语义完全相同。
+
+### 页面隐藏和 BFCache
+
+CLS 等指标可能在页面进入 hidden 时才得到最终值；浏览器从 back-forward cache（BFCache）恢复页面后，也可能产生新的指标实例。TraceKit 不在客户端擅自合并这些值，而是保留 `navigationType` 和 `metricId`，把去重、分组和最终统计交给数据服务。Integration close 后通过 active 标记忽略晚到回调，避免页面卸载期间继续创建事件。

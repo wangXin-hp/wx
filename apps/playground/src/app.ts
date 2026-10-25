@@ -20,10 +20,10 @@ export function renderApp(container: HTMLElement): void {
 
   container.innerHTML = `
     <section class="shell">
-      <p class="eyebrow">CHECKPOINT 3</p>
+      <p class="eyebrow">CHECKPOINT 4</p>
       <h1>TraceKit Playground</h1>
       <p class="intro">
-        点击按钮触发浏览器错误或手动事件。Browser SDK 会把它们交给 Core，页面下方展示最终 EventEnvelope。
+        点击按钮触发错误、性能或手动事件。Browser SDK 会把它们交给 Core，页面下方展示最终 EventEnvelope。
       </p>
       <dl class="package-grid">
         <div><dt>Browser package</dt><dd>${TRACE_KIT_BROWSER_NAME}</dd></div>
@@ -35,6 +35,7 @@ export function renderApp(container: HTMLElement): void {
         <button data-action="exception">手动捕获异常</button>
         <button data-action="message">发送消息事件</button>
         <button data-action="custom">发送自定义事件</button>
+        <button data-action="refresh">刷新事件面板</button>
         <button data-action="clear">清空事件</button>
       </div>
       <p class="hint">同时观察 Console、下面的事件 JSON 和浏览器的 Sources/Network 面板。</p>
@@ -79,4 +80,9 @@ export function renderApp(container: HTMLElement): void {
     transport.clear()
     renderEvents()
   })
+
+  container.querySelector('[data-action="refresh"]')?.addEventListener('click', renderEvents)
+
+  // LOAD 可能在初始化后立即产生，刷新一次让你能看到自动性能事件；其他 Web Vitals 会在浏览器时机成熟后出现。
+  window.setTimeout(renderEvents, 0)
 }

@@ -2,7 +2,7 @@
 
 TraceKit 是一个以学习和验证为目标的浏览器可观测性 SDK 项目。项目从空仓库逐步构建，每个阶段都保留架构决策、运行证据和真实调试记录。
 
-当前进度：**检查点 3——Browser SDK 错误采集与上下文**。现在已经具备平台无关的 Core 事件协议、浏览器错误监听、手动事件 API 和低敏浏览器上下文；性能指标和网络批量上报仍在后续检查点。
+当前进度：**检查点 4——Browser SDK 性能采集**。现在已经具备平台无关的 Core 事件协议、浏览器错误监听、低敏上下文和 Web Vitals/LOAD 性能指标映射；网络批量上报仍在后续检查点。
 
 ## 为什么使用 monorepo
 
@@ -46,6 +46,7 @@ pnpm dev
 - 触发 Promise rejection：由 `unhandledrejection` 自动捕获。
 - 手动捕获异常、消息和自定义事件：直接调用 Core API。
 - 清空事件：只清空当前页面的 MemoryTransport，不影响 SDK 配置。
+- 刷新事件面板：查看页面生命周期中自动产生的 LOAD 或 Web Vitals 事件。
 
 事件会显示在页面 JSON 面板和浏览器 Console 中。当前默认是 MemoryTransport/ConsoleTransport 调试模式，还没有发送到后端。
 
@@ -117,4 +118,4 @@ docs(docs): record transport debugging notes
 
 ## 当前明确不包含
 
-React、后端服务、数据库、Kafka、Docker、CI/CD、Web Vitals 和网络批量上报都不属于当前检查点。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。
+React、后端服务、数据库、Kafka、Docker、CI/CD 和网络批量上报都不属于当前检查点。它们会在对应需求出现时再引入，避免安装没有消费者的依赖。Web Vitals 已作为 Browser SDK 当前唯一运行时第三方依赖加入。

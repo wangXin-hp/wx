@@ -139,6 +139,26 @@ pnpm check
 
 建议提交信息：`feat(browser): capture browser errors and context`
 
+## 检查点 4 性能采集记录
+
+### 本次实现和验证
+
+- 安装 Browser SDK 唯一的运行时第三方依赖 `web-vitals@6.2.3`，不复制 CLS/FCP/INP/LCP/TTFB 的标准算法。
+- `WebVitalsIntegration` 默认把 `reportAllChanges` 设为 false，并将五种 Metric 映射成 `eventType: performance`。
+- LOAD 使用 Navigation Timing 自行计算，测试覆盖 `loadEventEnd` 不可用时回退到 `domComplete` 的路径。
+- close 后模拟晚到的 LCP 回调，确认不会再进入 Transport。
+- 第一次类型检查发现 DOM 的 `NavigationTimingType` 与 web-vitals 的 `NavigationType` 不是同一个 TypeScript 类型；最终在边界函数中按运行时字符串映射，避免错误复用两个标准声明。
+
+### Playground 人工验证
+
+1. 执行 `pnpm dev` 并打开浏览器 Console。
+2. 点击“刷新事件面板”，观察是否出现 `LOAD` 性能事件；事件 payload 的 source 应为 `navigation-timing`。
+3. 在页面上点击或滚动，等待浏览器产生 LCP/CLS/INP 等指标，再点击“刷新事件面板”。不同浏览器和页面内容不一定立即产生所有指标。
+4. 查看性能事件中的 `name/value/delta/rating/navigationType/metricId`，理解它们与错误事件 payload 的差异。
+5. 使用开发者工具模拟页面隐藏或返回前进缓存，观察指标回调可能延迟或产生新的 navigationType/metricId。
+
+建议提交信息：`feat(browser): collect web vitals and load timing`
+
 ## PowerShell 中的 Turbo 退出码排查
 
 - 初始现象：执行 `pnpm check` 在 `turbo run lint` 刚开始时退出，PowerShell 显示 `3221225781`。

@@ -3,6 +3,14 @@ export type { BrowserContext, BrowserRuntime } from './browser-context'
 export { BrowserErrorIntegration } from './error-integration'
 export { initBrowserMonitoring } from './init'
 export type { BrowserMonitoringOptions } from './init'
+export { WebVitalsIntegration, mapWebVitalMetric, readLoadMetric } from './performance'
+export type {
+  LoadPayload,
+  NavigationKind,
+  WebVitalName,
+  WebVitalsIntegrationOptions,
+  WebVitalsPayload,
+} from './performance'
 
 import { TRACE_KIT_CORE_NAME } from '@trace-kit/core'
 
