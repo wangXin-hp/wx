@@ -13,6 +13,7 @@ export function renderApp(container: HTMLElement): void {
   const transport = new MemoryTransport()
   const client = initBrowserMonitoring({
     appId: 'tracekit-playground',
+    dsn: 'tracekit://public-playground@localhost/tracekit-playground',
     transport,
     context: { source: 'playground' },
   })

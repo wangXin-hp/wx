@@ -7,6 +7,7 @@ import { BrowserErrorIntegration } from './error-integration'
 function createClient(transport: MemoryTransport): MonitorClient {
   return new MonitorClient({
     appId: 'browser-test',
+    dsn: 'tracekit://public-test@localhost/browser-test',
     transport,
     integrations: [new BrowserErrorIntegration()],
     context: { origin: 'https://example.test', pathname: '/test' },

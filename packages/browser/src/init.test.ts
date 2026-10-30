@@ -5,10 +5,23 @@ import { MemoryTransport } from '@trace-kit/core'
 import { initBrowserMonitoring } from './init'
 
 describe('initBrowserMonitoring', () => {
+  it('requires a DSN so browser events have a project boundary', () => {
+    // TypeScript 会在调用方缺少 dsn 时直接报错；运行时仍校验空白字符串。
+    expect(() =>
+      initBrowserMonitoring({
+        appId: 'browser-test',
+        dsn: ' ',
+        transport: new MemoryTransport(),
+        defaultIntegrations: false,
+      })
+    ).toThrow('non-empty dsn')
+  })
+
   it('adds browser context and default error integration', async () => {
     const transport = new MemoryTransport()
     const client = initBrowserMonitoring({
       appId: 'browser-test',
+      dsn: 'tracekit://public-test@localhost/browser-test',
       transport,
       context: { feature: 'playground' },
     })
@@ -26,6 +39,7 @@ describe('initBrowserMonitoring', () => {
     const transport = new MemoryTransport()
     const client = initBrowserMonitoring({
       appId: 'browser-test',
+      dsn: 'tracekit://public-test@localhost/browser-test',
       transport,
       defaultIntegrations: false,
     })

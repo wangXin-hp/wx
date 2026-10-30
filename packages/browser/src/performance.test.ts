@@ -58,6 +58,7 @@ describe('WebVitalsIntegration', () => {
     const transport = new MemoryTransport()
     const client = new MonitorClient({
       appId: 'performance-test',
+      dsn: 'tracekit://public-test@localhost/performance-test',
       transport,
       integrations: [new WebVitalsIntegration({ captureLoad: false })],
     })
@@ -78,6 +79,7 @@ describe('WebVitalsIntegration', () => {
     const transport = new MemoryTransport()
     const client = new MonitorClient({
       appId: 'performance-test',
+      dsn: 'tracekit://public-test@localhost/performance-test',
       transport,
       integrations: [new WebVitalsIntegration({ captureLoad: false })],
     })

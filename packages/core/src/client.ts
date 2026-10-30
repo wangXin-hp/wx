@@ -38,6 +38,9 @@ export class MonitorClient {
    */
   constructor(options: MonitorOptions) {
     if (!options.appId.trim()) throw new Error('MonitorClient requires a non-empty appId')
+    if (options.dsn !== undefined && !options.dsn.trim()) {
+      throw new Error('MonitorClient requires a non-empty dsn when dsn is provided')
+    }
 
     this.options = {
       ...options,
@@ -72,6 +75,10 @@ export class MonitorClient {
       payload: safeSerialize(payload),
     }
 
+    // DSN 是项目路由身份，不参与 eventId 生成；同一个客户端的所有事件共享它。
+    // 这样错误、性能和自定义埋点才能在服务端落到同一个项目分区。
+    if (this.options.dsn !== undefined) event.dsn = this.options.dsn.trim()
+
     if (this.options.release !== undefined) event.release = this.options.release
     if (this.options.environment !== undefined) event.environment = this.options.environment
 
@@ -85,6 +92,9 @@ export class MonitorClient {
       context: toContext(prepared.context),
       payload: safeSerialize(prepared.payload),
     }
+    // beforeSend 可以修改业务数据，但不能把事件偷偷改投到另一个项目。
+    // DSN 以 MonitorClient 初始化值为准，避免多租户边界被钩子破坏。
+    if (this.options.dsn !== undefined) transportEvent.dsn = this.options.dsn.trim()
     // Core 不在这里自行重试；批量、超时和失败回队属于具体 Transport 的职责。
     await this.options.transport.send(transportEvent)
     return transportEvent.eventId

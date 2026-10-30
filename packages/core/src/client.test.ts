@@ -56,6 +56,21 @@ describe('MonitorClient event protocol', () => {
     expect(transport.events[0]?.context).toEqual({ scrubbed: true })
   })
 
+  it('stamps every event with the configured DSN and keeps it immutable through beforeSend', async () => {
+    const transport = new MemoryTransport()
+    const client = new MonitorClient({
+      appId: 'learning-app',
+      dsn: ' tracekit://public-key@localhost/project-a ',
+      transport,
+      beforeSend: (event) => ({ ...event, dsn: 'tracekit://another-project' }),
+      idFactory: createIdFactory('session', 'event'),
+    })
+
+    await client.captureMessage('belongs to project A')
+
+    expect(transport.events[0]?.dsn).toBe('tracekit://public-key@localhost/project-a')
+  })
+
   it('supports asynchronous beforeSend', async () => {
     const transport = new MemoryTransport()
     const client = new MonitorClient({
@@ -151,5 +166,8 @@ describe('MonitorClient lifecycle', () => {
 
     const client = new MonitorClient({ appId: 'learning-app', transport: new MemoryTransport() })
     await expect(client.captureEvent(' ')).rejects.toThrow('non-empty name')
+    expect(
+      () => new MonitorClient({ appId: 'learning-app', dsn: ' ', transport: new MemoryTransport() })
+    ).toThrow('non-empty dsn')
   })
 })

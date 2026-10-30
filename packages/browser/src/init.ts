@@ -12,8 +12,13 @@ import { WebVitalsIntegration } from './performance'
 
 export interface BrowserMonitoringOptions extends Omit<
   MonitorOptions,
-  'context' | 'integrations' | 'transport'
+  'context' | 'integrations' | 'transport' | 'dsn'
 > {
+  /**
+   * 接入项目的公开 DSN。浏览器 SDK 必须明确项目归属，否则多项目数据会混在一起。
+   * DSN 不是数据库密码；真正的鉴权和项目权限仍由后端采集服务负责。
+   */
+  dsn: string
   /** 未指定时使用控制台 Transport；真正的 FetchTransport 会在后续检查点加入。 */
   transport?: Transport
   context?: Record<string, unknown>

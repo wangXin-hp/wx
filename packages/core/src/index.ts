@@ -8,6 +8,7 @@ export type {
   BeforeSend,
   Clock,
   CustomEventPayload,
+  Dsn,
   ErrorPayload,
   EventEnvelope,
   EventType,

@@ -105,3 +105,23 @@ JavaScript 允许 `Promise.reject('failed')`、`Promise.reject({ message: 'faile
 ### 页面隐藏和 BFCache
 
 CLS 等指标可能在页面进入 hidden 时才得到最终值；浏览器从 back-forward cache（BFCache）恢复页面后，也可能产生新的指标实例。TraceKit 不在客户端擅自合并这些值，而是保留 `navigationType` 和 `metricId`，把去重、分组和最终统计交给数据服务。Integration close 后通过 active 标记忽略晚到回调，避免页面卸载期间继续创建事件。
+
+## 14. DSN 是多项目隔离的第一层边界
+
+TraceKit 不是只服务 playground 的单应用脚本，而是供多个业务项目接入的监控依赖。每个业务项目从 TraceKit 服务端申请一个 DSN，并在初始化浏览器 SDK 时传入：
+
+```ts
+initBrowserMonitoring({
+  appId: 'checkout-web',
+  dsn: 'tracekit://public-key@collector.example.com/project-checkout',
+})
+```
+
+DSN 在当前阶段被当作公开的项目路由标识：
+
+1. `MonitorClient` 在创建每个事件信封时写入 DSN。
+2. `beforeSend` 可以脱敏 payload，但不能把事件改投到另一个 DSN。
+3. Transport 重试时复用同一份 envelope，因此 DSN、eventId 和 sessionId 都保持稳定。
+4. 后续 FetchTransport 会从 DSN 解析采集地址或项目键；数据服务收到事件后先校验 DSN，再写入项目维度的 PostgreSQL 元数据和 ClickHouse 事件表。
+
+`appId` 仍然保留，它描述“哪个业务应用在发送”；DSN 描述“数据属于 TraceKit 的哪个项目”。两者不能互相替代：同一个项目可以接入多个应用，而一个应用在不同环境也可以使用不同 DSN。当前这一步只完成 SDK 协议和身份传播，尚未实现 DSN 管理后台、服务端鉴权、数据库分区或 dashboard 查询。

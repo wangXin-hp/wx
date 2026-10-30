@@ -10,6 +10,12 @@ export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue
  */
 export type EventType = 'custom' | 'error' | 'message' | 'performance'
 
+/**
+ * DSN 是接入项目的公开路由标识。它不是数据库密码或管理令牌，
+ * 但仍建议由服务端生成，避免客户端自行伪造不存在的项目。
+ */
+export type Dsn = string
+
 /** message 事件的严重程度，不等同于 HTTP 状态码。 */
 export type LogLevel = 'debug' | 'error' | 'info' | 'warning'
 
@@ -20,6 +26,11 @@ export interface SdkInfo {
 }
 
 export interface EventEnvelope<TPayload = JsonValue> {
+  /**
+   * 事件所属项目的 DSN。它会随事件一起进入 Transport，保证后续服务端可以
+   * 在同一个采集入口中区分多个接入项目；重试时必须保持不变。
+   */
+  dsn?: Dsn
   /**
    * eventId 是一次事件的稳定身份。Transport 重试时必须复用整个事件，不能重新生成 ID，
    * 否则服务端无法去重，同一故障也无法在日志和数据链路中被准确追踪。
@@ -74,6 +85,11 @@ export type IdFactory = () => string
 export interface MonitorOptions {
   /** 由接入方提供的稳定应用标识，不能留空。 */
   appId: string
+  /**
+   * 可选的项目路由标识。Core 保留可选是为了兼容非网络测试/Node 场景；浏览器
+   * SDK 的公开初始化入口会要求提供它，因为浏览器数据必须归属一个项目。
+   */
+  dsn?: Dsn
   /** Core 不决定网络协议，调用方必须明确选择一个 Transport。 */
   transport: Transport
   /** 按传入顺序安装，关闭时按逆序清理。 */

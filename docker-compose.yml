@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: bitnamilegacy/postgresql:17.5.0-debian-12-r9
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRESQL_DATABASE: ${DATABASE_NAME:-tracekit}
+      POSTGRESQL_USERNAME: ${DATABASE_USERNAME:-postgres}
+      ALLOW_EMPTY_PASSWORD: ${ALLOW_EMPTY_PASSWORD:-yes}
+      POSTGRESQL_PASSWORD: ${DATABASE_PASSWORD:-}
+    volumes:
+      - tracekit_postgresql_data:/bitnami/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USERNAME:-postgres} -d ${DATABASE_NAME:-tracekit}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  tracekit_postgresql_data:
