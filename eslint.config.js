@@ -15,7 +15,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/browser/src/**/*.{ts,tsx}', 'apps/playground/src/**/*.{ts,tsx}'],
+    files: [
+      'packages/browser/src/**/*.{ts,tsx}',
+      'apps/playground/src/**/*.{ts,tsx}',
+      'apps/frontend/src/**/*.{ts,tsx}',
+    ],
     languageOptions: {
       // 只给真正运行在浏览器中的代码开放 DOM 全局变量。
       // core 即使误写 window，也不能因为共享 ESLint 配置而被静默放过。

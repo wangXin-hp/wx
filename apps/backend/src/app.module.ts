@@ -6,6 +6,8 @@ import { ApplicationEntity } from './applications/application.entity'
 import { ApplicationsModule } from './applications/applications.module'
 import { RefreshSessionEntity } from './auth/refresh-session.entity'
 import { UserEntity } from './users/user.entity'
+import { CollectorModule } from './collector/collector.module'
+import { EventEntity } from './collector/event.entity'
 
 @Module({
   imports: [
@@ -21,12 +23,13 @@ import { UserEntity } from './users/user.entity'
         username: config.get('DATABASE_USERNAME', 'postgres'),
         password: config.get('DATABASE_PASSWORD', ''),
         database: config.get('DATABASE_NAME', 'tracekit'),
-        entities: [UserEntity, ApplicationEntity, RefreshSessionEntity],
+        entities: [UserEntity, ApplicationEntity, RefreshSessionEntity, EventEntity],
         synchronize: false,
       }),
     }),
     AuthModule,
     ApplicationsModule,
+    CollectorModule,
   ],
 })
 export class AppModule {}

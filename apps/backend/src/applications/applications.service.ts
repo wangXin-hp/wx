@@ -10,8 +10,9 @@ export class ApplicationsService {
   constructor(
     @InjectRepository(ApplicationEntity) private readonly applications: Repository<ApplicationEntity>
   ) {}
-  list(ownerId: string) {
-    return this.applications.find({ where: { ownerId }, order: { createdAt: 'DESC' } })
+  async list(ownerId: string) {
+    const entities = await this.applications.find({ where: { ownerId }, order: { createdAt: 'DESC' } })
+    return entities.map((entity) => this.output(entity))
   }
   async create(ownerId: string, dto: CreateApplicationDto) {
     const entity = this.applications.create({ ...dto, ownerId, publicKey: this.key() })

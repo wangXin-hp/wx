@@ -1,5 +1,10 @@
-import { getCorePackageName, initBrowserMonitoring, TRACE_KIT_BROWSER_NAME } from '@trace-kit/browser'
-import { MemoryTransport, type MonitorClient } from '@trace-kit/core'
+import {
+  FetchTransport,
+  getCorePackageName,
+  initBrowserMonitoring,
+  TRACE_KIT_BROWSER_NAME,
+} from '@trace-kit/browser'
+import type { MonitorClient } from '@trace-kit/core'
 
 let activeClient: MonitorClient | undefined
 
@@ -10,10 +15,11 @@ let activeClient: MonitorClient | undefined
 export function renderApp(container: HTMLElement): void {
   void activeClient?.close()
 
-  const transport = new MemoryTransport()
+  const transport = new FetchTransport({ endpoint: '/collect' })
   const client = initBrowserMonitoring({
-    appId: 'tracekit-playground',
-    dsn: 'tracekit://public-playground@localhost/tracekit-playground',
+    appId: import.meta.env.VITE_TRACEKIT_APP_ID ?? 'tracekit-playground',
+    dsn: import.meta.env.VITE_TRACEKIT_DSN ?? 'tracekit://public-playground@localhost/tracekit-playground',
+    environment: import.meta.env.VITE_TRACEKIT_ENVIRONMENT ?? 'development',
     transport,
     context: { source: 'playground' },
   })
@@ -47,8 +53,7 @@ export function renderApp(container: HTMLElement): void {
   const output = container.querySelector<HTMLElement>('[data-event-output]')
   const renderEvents = (): void => {
     if (!output) return
-    output.textContent = JSON.stringify(transport.events, null, 2)
-    console.log('[TraceKit playground events]', transport.events)
+    output.textContent = '事件已发送到本地 Collector。请在 Network 面板查看 POST /collect。'
   }
 
   const capture = (promise: Promise<string | null>): void => {
@@ -78,8 +83,7 @@ export function renderApp(container: HTMLElement): void {
   })
 
   container.querySelector('[data-action="clear"]')?.addEventListener('click', () => {
-    transport.clear()
-    renderEvents()
+    if (output) output.textContent = '网络 Transport 不在浏览器保留事件副本；请在后台查询接口查看已采集事件。'
   })
 
   container.querySelector('[data-action="refresh"]')?.addEventListener('click', renderEvents)

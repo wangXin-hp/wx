@@ -15,5 +15,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3.1
+    profiles: [analytics]
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    environment:
+      CLICKHOUSE_DB: tracekit
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes:
+      - tracekit_clickhouse_data:/var/lib/clickhouse
 volumes:
   tracekit_postgresql_data:
+  tracekit_clickhouse_data:

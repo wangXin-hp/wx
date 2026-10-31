@@ -2,6 +2,8 @@ export { collectBrowserContext } from './browser-context'
 export type { BrowserContext, BrowserRuntime } from './browser-context'
 export { BrowserErrorIntegration } from './error-integration'
 export { initBrowserMonitoring } from './init'
+export { FetchTransport } from './fetch-transport'
+export type { FetchTransportOptions } from './fetch-transport'
 export type { BrowserMonitoringOptions } from './init'
 export { WebVitalsIntegration, mapWebVitalMetric, readLoadMetric } from './performance'
 export type {

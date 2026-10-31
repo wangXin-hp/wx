@@ -11,4 +11,4 @@ coverage/
 .idea/
 .vscode/*
 !.vscode/extensions.json
-
+apps/frontend/docs/*
