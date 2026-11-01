@@ -1,5 +1,7 @@
 node_modules/
 dist/
+!devcontainer/dist/
+!devcontainer/dist/**
 coverage/
 .turbo/
 *.tsbuildinfo

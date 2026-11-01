@@ -1,0 +1,21 @@
+:80 {
+    root * /srv
+    encode gzip zstd
+
+    # route 保证 API/采集代理先匹配，避免 POST 请求落到静态 file_server 后返回 405。
+    route {
+        # Caddy 容器通过 host.docker.internal 访问 Windows 宿主机上的 Nest + PM2。
+        handle_path /api/* {
+            reverse_proxy host.docker.internal:3000
+        }
+
+        # SDK 的 DSN 上报地址不经过 /api 前缀。
+        handle /collect* {
+            reverse_proxy host.docker.internal:3000
+        }
+
+        # React Router 刷新时，未知路径回退到入口文件，避免白屏。
+        try_files {path} {path}/ /index.html
+        file_server
+    }
+}

@@ -27,6 +27,24 @@ services:
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
     volumes:
       - tracekit_clickhouse_data:/var/lib/clickhouse
+  caddy:
+    image: caddy:2.10.0-alpine
+    ports:
+      - '8080:80'
+      - '8443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    depends_on:
+      postgres:
+        condition: service_healthy
 volumes:
   tracekit_postgresql_data:
+    name: monitor_tracekit_postgresql_data
   tracekit_clickhouse_data:
+  caddy_data:
+  caddy_config:

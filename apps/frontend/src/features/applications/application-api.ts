@@ -11,21 +11,7 @@ export interface Application {
   createdAt: string
   updatedAt: string
 }
-
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('tracekit.accessToken') ?? sessionStorage.getItem('tracekit.accessToken')
-  const response = await fetch(`/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token ?? ''}`,
-      ...options.headers,
-    },
-  })
-  const body = await response.json().catch(() => null)
-  if (!response.ok) throw new Error(body?.message ?? '应用请求失败')
-  return body as T
-}
+import { request } from '../../utils/request'
 
 export const listApplications = () => request<Application[]>('/applications')
 export const createApplication = (
